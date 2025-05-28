@@ -1,6 +1,7 @@
 import os
 import shutil
 
+
 def extract_images_by_prefix(source_dir, output_dir):
     if not os.path.exists(source_dir):
         print(f"源目录不存在：{source_dir}")
@@ -26,7 +27,8 @@ def extract_images_by_prefix(source_dir, output_dir):
 
     print(f"\n提取完成，总共提取 {len(seen_prefixes)} 类图片到 {output_dir}")
 
+
 # 示例使用
-source_folder = 'D:\\yolov5\\RealTime-TSR\\data\\train\images\\train'   # 替换为你的源文件夹路径
-output_folder = 'output'               # 输出文件夹路径
+source_folder = 'D:\\yolov5\\RealTime-TSR\\data\\train\images\\train'  # 替换为你的源文件夹路径
+output_folder = 'output'  # 输出文件夹路径
 extract_images_by_prefix(source_folder, output_folder)
