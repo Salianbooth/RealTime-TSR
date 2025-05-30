@@ -29,6 +29,6 @@ def extract_images_by_prefix(source_dir, output_dir):
 
 
 # 示例使用
-source_folder = 'D:\\yolov5\\RealTime-TSR\\data\\train\images\\train'  # 替换为你的源文件夹路径
+source_folder = 'D:\\yolov5_local\\RealTime-TSR\\data\\train\images\\train'  # 替换为你的源文件夹路径
 output_folder = 'output'  # 输出文件夹路径
 extract_images_by_prefix(source_folder, output_folder)
