@@ -31,7 +31,7 @@ class VideoProcessThread(QThread):
                 'python', self.detect_script,
                 '--weights', 'best_1.pt',
                 '--source', self.video_path,
-                '--img', '640',  # 降低分辨率到416
+                '--img', '416',  # 降低分辨率到416
                 '--conf', '0.25',
                 '--device', '0'  # 使用GPU加速
             ]
@@ -71,14 +71,24 @@ class VideoProcessThread(QThread):
 
                 # 查找处理后的视频文件
                 found = False
-                for file in output_dir.glob(f"{video_name}*.mp4"):
-                    print(f"找到处理后的视频: {file}")
-                    self.finished.emit(str(file))
-                    found = True
-                    break
+                # 首先列出所有exp目录
+                exp_dirs = list(output_dir.glob('exp*'))
+                if exp_dirs:
+                    # 使用最新的exp目录
+                    latest_exp = max(exp_dirs, key=lambda x: x.stat().st_mtime)
+                    print(f"使用最新的输出目录: {latest_exp}")
+
+                    # 在exp目录中查找视频文件
+                    for file in latest_exp.glob(f"{video_name}*.mp4"):
+                        print(f"找到处理后的视频: {file}")
+                        self.finished.emit(str(file))
+                        found = True
+                        break
+                else:
+                    print("未找到exp目录")
 
                 if not found:
-                    error_msg = f"未找到处理后的视频文件。\n视频名称: {video_name}\n输出目录: {output_dir.absolute()}"
+                    error_msg = f"未找到处理后的视频文件。\n视频名称: {video_name}\n输出目录: {output_dir.absolute()}\n已检查的exp目录: {[str(d) for d in exp_dirs]}"
                     print(error_msg)
                     self.error.emit(error_msg)
             else:
