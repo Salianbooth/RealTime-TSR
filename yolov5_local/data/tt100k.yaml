@@ -1,7 +1,7 @@
-path: D:/develop/YoloDB/tt100k_yolo
-train: train.txt
-val: test.txt
-test: test.txt
+path: D:/RealTime-TSR/data/tt100k_yolo
+train: images/train
+val: images/val
+test: images/test
 names:
  0: pl80
  1: p6
