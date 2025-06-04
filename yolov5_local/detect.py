@@ -136,17 +136,6 @@ def run(
 
     Returns:
         None
-
-    Examples:
-        ```python
-        from ultralytics import run
-
-        # Run inference on an image
-        run(source='data/images/example.jpg', weights='yolov5s.pt', device='0')
-
-        # Run inference on a video with specific confidence threshold
-        run(source='data/videos/example.mp4', weights='yolov5s.pt', conf_thres=0.4, device='0')
-        ```
     """
     source = str(source)
     save_img = not nosave and not source.endswith(".txt")  # save inference images
@@ -182,6 +171,7 @@ def run(
     # Run inference
     model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *imgsz))  # warmup
     seen, windows, dt = 0, [], (Profile(device=device), Profile(device=device), Profile(device=device))
+
     for path, im, im0s, vid_cap, s in dataset:
         with dt[0]:
             im = torch.from_numpy(im).to(model.device)
@@ -194,23 +184,21 @@ def run(
 
         # Inference
         with dt[1]:
-            visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
+            visualize_flag = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
             if model.xml and im.shape[0] > 1:
                 pred = None
                 for image in ims:
                     if pred is None:
-                        pred = model(image, augment=augment, visualize=visualize).unsqueeze(0)
+                        pred = model(image, augment=augment, visualize=visualize_flag).unsqueeze(0)
                     else:
-                        pred = torch.cat((pred, model(image, augment=augment, visualize=visualize).unsqueeze(0)), dim=0)
+                        pred = torch.cat((pred, model(image, augment=augment, visualize=visualize_flag).unsqueeze(0)), dim=0)
                 pred = [pred, None]
             else:
-                pred = model(im, augment=augment, visualize=visualize)
+                pred = model(im, augment=augment, visualize=visualize_flag)
+
         # NMS
         with dt[2]:
             pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
-
-        # Second-stage classifier (optional)
-        # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
 
         # Define the path for the CSV file
         csv_path = save_dir / "predictions.csv"
@@ -242,6 +230,7 @@ def run(
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             imc = im0.copy() if save_crop else im0  # for save_crop
             annotator = Annotator(im0, line_width=line_thickness, example=str(names))
+
             if len(det):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], im0.shape).round()
@@ -251,15 +240,27 @@ def run(
                     n = (det[:, 5] == c).sum()  # detections per class
                     s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
+                # -------------------- 新增：打印每个类别的数量 --------------------
+                print(f"[INFO] 图像 {p.name} 共检测到 {len(det)} 个目标，其中：")
+                for c in det[:, 5].unique():
+                    count = int((det[:, 5] == c).sum())
+                    print(f"         类别 “{names[int(c)]}” ：{count} 个")
+                # ------------------------------------------------------------
+
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
                     c = int(cls)  # integer class
-                    label = names[c] if hide_conf else f"{names[c]}"
+                    label_name = names[c]
                     confidence = float(conf)
-                    confidence_str = f"{confidence:.2f}"
+
+                    # -------------------- 新增：打印每个目标的类别和置信度 --------------------
+                    print(f"[DETECT] 图像 {p.name}：类别 = {label_name}，置信度 = {confidence:.2f}")
+                    # 如果想要打印框坐标，可取消下一行注释
+                    # print(f"          坐标 = ({xyxy[0]:.1f}, {xyxy[1]:.1f}, {xyxy[2]:.1f}, {xyxy[3]:.1f})")
+                    # ------------------------------------------------------------
 
                     if save_csv:
-                        write_to_csv(p.name, label, confidence_str)
+                        write_to_csv(p.name, label_name, f"{confidence:.2f}")
 
                     if save_txt:  # Write to file
                         if save_format == 0:
@@ -358,12 +359,6 @@ def parse_opt():
 
     Returns:
         argparse.Namespace: Parsed command-line arguments as an argparse.Namespace object.
-
-    Example:
-        ```python
-        from ultralytics import YOLOv5
-        args = YOLOv5.parse_opt()
-        ```
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--weights", nargs="+", type=str, default=ROOT / "yolov5s.pt", help="model path or triton URL")
@@ -420,14 +415,6 @@ def main(opt):
         This function performs essential pre-execution checks and initiates the YOLOv5 detection process based on user-specified
         options. Refer to the usage guide and examples for more information about different sources and formats at:
         https://github.com/ultralytics/ultralytics
-
-    Example usage:
-
-    ```python
-    if __name__ == "__main__":
-        opt = parse_opt()
-        main(opt)
-    ```
     """
     check_requirements(ROOT / "requirements.txt", exclude=("tensorboard", "thop"))
     run(**vars(opt))
