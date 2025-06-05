@@ -984,3 +984,8 @@ def run(**kwargs):
 if __name__ == "__main__":
     opt = parse_opt()
     main(opt)
+
+
+# python train.py --img 640 --batch 8 --epochs 300 --data trsd.yaml --weights yolov5n.pt
+# python train.py --img 640 --batch 8 --epochs 300 --data tt100k.yaml --weights yolov5s.pt
+# python train.py --img 640 --batch 8 --epochs 300 --data tt100k.yaml --weights yolov5n.pt

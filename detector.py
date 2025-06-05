@@ -5,7 +5,6 @@ from pathlib import Path
 
 class Detector:
     def __init__(self):
-        # 假设 yolov5_local 位于当前脚本同级目录
         repo_dir = str(Path(__file__).parent / "yolov5_local")
         weights_path = str(Path(__file__).parent / "yolov5_local" / "best_1.pt")
 
